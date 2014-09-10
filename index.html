@@ -1,0 +1,187 @@
+<html>
+<head>
+	<title>FreeFlow game</title>
+	<script type="text/javascript" src="js/angular.min.js"></script>
+	<script type="text/javascript">
+	var GameApplication = angular.module('GameApp', []);
+	
+	GameApplication.controller("InitController", function($scope){
+		$scope.isUserTableReady = 0;
+		$scope.colorBoxes = ['red', 'yellow', 'blue'];
+		//Mouse operation
+		$scope.isPressed = 0;	
+		$scope.firstCellBkColor = "";
+		$scope.pathTraversed = [];
+		$scope.prevBkColor = "";
+		$scope.defaultBkColor = "white";
+		
+		/* It will used in case of undo the user selection */
+		$scope.rollBackCellColor = function(){
+			var i, cellID, tempElem, len = ($scope.pathTraversed).length;
+			for(i=1;i<len;i++){							
+				cellID = "#" + $scope.pathTraversed[i];																				
+				tempElem = angular.element(document.querySelector(cellID));
+				tempElem.removeClass($scope.firstCellBkColor);
+			}
+			console.log('Called - rollBackCellColor');
+			console.log('d3: ' + scope.pathTraversed);	
+		};
+			  			  
+		$scope.drawTable = function(){			
+			console.log('Table drawing activity completed.');
+			$scope.isUserTableReady = 0;
+		}
+		
+		$scope.drawColoredBoxes = function(){
+			if($scope.isUserTableReady){
+				console.log('Colored pairs are created on table.');
+			}else{
+				console.log('Table is not ready, hence droping the execution.');
+			}			
+		}
+		
+		$scope.init = function(){
+			$scope.drawTable();
+			$scope.drawColoredBoxes();	
+		}
+		
+		
+	});
+	
+	GameApplication.directive('userConvasArea', function(){
+			return {
+				restrict: 'E',
+				template: '<div class="row"><div class="cell red" id="cell1"></div><div class="cell" id="cell2"></div><div class="cell" id="cell3"></div><div class="cell" id="cell4"></div><div class="cell red" id="cell5"></div></div>'
+			};
+	});
+	
+	GameApplication.directive('cell', function() {
+		  return {
+			restrict: 'C',			
+			link: function(scope, elem, attrs) {
+			  
+			  
+			  elem.bind('mousedown', function() {
+				//Basic initialization	
+				scope.isPressed = 1; 	
+				scope.pathTraversed = [];			
+				
+				var classNames = (elem.attr('class')).split(" ");
+				scope.firstCellBkColor = classNames[1];			
+				(scope.pathTraversed).push(attrs.id);
+				console.log('Starting point is '+attrs.id);			
+			  });
+			  
+			  elem.bind('mouseover', function() {
+				if(scope.isPressed){
+					//Finding the current startCellBkColor & assigning it to global varible called prevBkColor
+					var classNames = (elem.attr('class')).split(" ");					
+					if(classNames.length == 1 && classNames[0] == "cell"){						
+						scope.prevBkColor = classNames[1] = "white";	
+					}else{						
+						scope.prevBkColor = classNames[1];													
+					}				
+					
+					//Check - if current startCellBkColor is different from startCellBkColor or white means its trying to overlap & we need to stop it & try to rollback the cells
+					console.log('startCellBkColor: '+scope.firstCellBkColor+ ' & current cell bkcolor : ' + classNames[1] + ' & prev Bkcolor:' + scope.prevBkColor);					
+					if(scope.prevBkColor != scope.defaultBkColor && scope.prevBkColor != scope.firstCellBkColor){
+						console.log('Colored cell overlapping issue - terminating it');
+						scope.rollBackCellColor();
+						scope.isPressed = 0;					
+						return;
+					}	
+					//Assigning the back ground color
+					elem.addClass(scope.firstCellBkColor);	
+					(scope.pathTraversed).push(attrs.id);					
+				}				
+			  });
+			  
+			  elem.bind('mouseup', function(){
+				if(scope.isPressed){
+					var i=0, 
+						cellID,	tempElem, classNames, 
+						len = (scope.pathTraversed).length;
+					scope.isPressed = 0;					
+					classNames = (elem.attr('class')).split(" ");
+					console.log('First cell BkColor: '+scope.firstCellBkColor+ ' & current cell bkcolor : ' + classNames[1] + ' & prev Bkcolor:' + scope.prevBkColor);
+					if(scope.firstCellBkColor != classNames[1]){						
+						len--;
+						for(i=1;i<len;i++){							
+							cellID = "#" + scope.pathTraversed[i];																				
+							tempElem = angular.element(document.querySelector(cellID));
+							tempElem.removeClass(scope.firstCellBkColor);
+						}
+						console.log('d1: '+ scope.pathTraversed);
+					}else{
+						//If user release the mouse button in between
+						if(scope.prevBkColor == scope.defaultBkColor){
+							for(i=1;i<len;i++){							
+								cellID = "#" + scope.pathTraversed[i];																				
+								tempElem = angular.element(document.querySelector(cellID));
+								tempElem.removeClass(scope.firstCellBkColor);
+							}
+							console.log('d2: ' + scope.pathTraversed);	
+						}
+					}									
+					console.log('End point is '+attrs.id);					
+				}  
+				
+			  });
+			}
+		  };
+	});
+	</script>
+	<style>
+		.cell{height: 100px; width: 100px; border: red 1px solid;float: left;}
+		.red {background-color: red;}
+		.yellow {background-color: yellow;}
+		.blue {background-color: blue;}
+		.row {clear: both;}
+	</style>
+</head>
+<body>
+<div ng-app='GameApp' ng-controller="InitController" ng-init="init()">
+	
+	<!--Enter the play table dimension <input type="text">
+	<user-convas-area></user-convas-area>
+	-->
+	
+	<div class="row">
+	<div class="cell red" id="cell1"></div>
+	<div class="cell" id="cell2"></div>
+	<div class="cell" id="cell3"></div>
+	<div class="cell" id="cell4"></div>
+	<div class="cell red" id="cell5"></div>
+	</div>
+	<div class="row">	
+	<div class="cell" id="cell6"></div>
+	<div class="cell yellow" id="cell7"></div>
+	<div class="cell" id="cell8"></div>	
+	<div class="cell" id="cell9"></div>	
+	<div class="cell" id="cell10"></div>	
+	</div>
+	<div class="row">	
+	<div class="cell" id="cell11"></div>
+	<div class="cell" id="cell12"></div>
+	<div class="cell" id="cell13"></div>	
+	<div class="cell" id="cell14"></div>	
+	<div class="cell blue" id="cell15"></div>	
+	</div>
+	<div class="row">	
+	<div class="cell" id="cell16"></div>
+	<div class="cell" id="cell17"></div>
+	<div class="cell" id="cell18"></div>	
+	<div class="cell" id="cell19"></div>	
+	<div class="cell" id="cell20"></div>	
+	</div>
+	<div class="row">	
+	<div class="cell yellow" id="cell21"></div>
+	<div class="cell" id="cell22"></div>
+	<div class="cell blue" id="cell23"></div>	
+	<div class="cell" id="cell24"></div>	
+	<div class="cell" id="cell25"></div>	
+	</div>
+	
+</div>
+</body>
+</html>
