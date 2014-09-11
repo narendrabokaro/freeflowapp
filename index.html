@@ -5,7 +5,7 @@
 	<script type="text/javascript">
 	var GameApplication = angular.module('GameApp', []);
 	
-	GameApplication.controller("InitController", function($scope){
+	GameApplication.controller("InitController", function($scope, $sce){
 		$scope.isUserTableReady = 0;
 		$scope.colorBoxes = ['red', 'yellow', 'blue'];
 		//Mouse operation
@@ -14,7 +14,14 @@
 		$scope.pathTraversed = [];
 		$scope.prevBkColor = "";
 		$scope.defaultBkColor = "white";
-		
+		$scope.userPlayAreaContent = '';
+		$scope.myDim = 0;
+		$scope.convasdimension = [			  
+			  {name:'3x3', id:3},
+			  {name:'4x4', id:4},
+			  {name:'5x5', id:5},		  
+		];
+				
 		/* It will used in case of undo the user selection */
 		$scope.rollBackCellColor = function(){
 			var i, cellID, tempElem, len = ($scope.pathTraversed).length;
@@ -24,10 +31,21 @@
 				tempElem.removeClass($scope.firstCellBkColor);
 			}
 			console.log('Called - rollBackCellColor');
-			console.log('d3: ' + scope.pathTraversed);	
+			console.log('d3: ' + $scope.pathTraversed);	
 		};
 			  			  
-		$scope.drawTable = function(){			
+		$scope.drawTable = function(){		
+			console.log('this is selected : ' + $scope.myDim);
+			var divs = '', counter = 1, i, j;						
+			for(i=0;i<5;i++){
+				divs += '<div class="row">'
+				for(j=0;j<5;j++){
+					divs += '<div class="cell" id="cell'+(counter++)+'"></div>';
+				}					
+				divs += '</div>';	
+			}	
+			
+			$scope.userPlayAreaContent = $sce.trustAsHtml(divs);
 			console.log('Table drawing activity completed.');
 			$scope.isUserTableReady = 0;
 		}
@@ -49,10 +67,9 @@
 	});
 	
 	GameApplication.directive('userConvasArea', function(){
-			return {
-				restrict: 'E',
-				replace: true,
-				template: '<div class="row"><div class="cell red" id="cell1"></div><div class="cell" id="cell2"></div><div class="cell" id="cell3"></div><div class="cell" id="cell4"></div><div class="cell red" id="cell5"></div></div>'
+			return {	
+				restrict: 'AE',
+				template: '<div ng-bind-html="userPlayAreaContent"></div>',							
 			};
 	});
 	
@@ -142,11 +159,13 @@
 </head>
 <body>
 <div ng-app='GameApp' ng-controller="InitController" ng-init="init()">
-	
-	<!--Enter the play table dimension <input type="text">
-	<user-convas-area></user-convas-area>
-	-->
-	
+	Select the User convas dimension : 
+    <select ng-model="myDim" ng-options="dimension.name for dimension in convasdimension"></select>   
+    
+    <div ng-show="myDim > 2">
+    <user-convas-area></user-convas-area>
+	</div>
+	<!--	
 	<div class="row">
 	<div class="cell red" id="cell1"></div>
 	<div class="cell" id="cell2"></div>
@@ -182,7 +201,7 @@
 	<div class="cell" id="cell24"></div>	
 	<div class="cell" id="cell25"></div>	
 	</div>
-	
+	-->
 </div>
 </body>
 </html>
