@@ -22,10 +22,19 @@
 			  {name:'5x5', id:5},		  
 		];
 		
-		$scope.selectAction = function(){
-			console.log('Option selected : ' + $scope.myDim);	
-		}		
+		$scope.colorCode = ["red", "green", "yellow", "blue", "orange"];
 		
+		$scope.colorLocations = [
+			[1, 16, 11, 16, 21, 22],
+			[3, 2, 7, 12, 17],
+			[5, 4, 9, 14, 19],
+			[8, 13, 18, 27],
+			[10, 15, 20, 25, 24]
+		];
+		
+		$scope.onChange = function(){
+			$scope.drawTable();	
+		}
 		/* It will used in case of undo the user selection */
 		$scope.rollBackCellColor = function(){
 			var i, cellID, tempElem, len = ($scope.pathTraversed).length;
@@ -37,21 +46,25 @@
 			console.log('Called - rollBackCellColor');
 			console.log('d3: ' + $scope.pathTraversed);	
 		};
-			  			  
-		$scope.drawTable = function(){		
-			console.log('this is selected : ' + $scope.myDim);
-			var divs = '', counter = 1, i, j;						
-			for(i=0;i<5;i++){
+		
+		/* Draw the user play convas */	  			  
+		$scope.drawTable = function(){			
+			var divs = '', counter = 1, i, j, dim;
+			dim = $scope.myDim;
+			console.log('Dim : ' + dim);
+									
+			for(i=0;i<dim;i++){
 				divs += '<div class="row">'
-				for(j=0;j<5;j++){
+				for(j=0;j<dim;j++){
 					divs += '<div class="cell" id="cell'+(counter++)+'"></div>';
 				}					
 				divs += '</div>';	
 			}	
 			
-			$scope.userPlayAreaContent = $sce.trustAsHtml(divs);
+			$scope.userPlayAreaContent = $sce.trustAsHtml(divs);	
 			console.log('Table drawing activity completed.');
 			$scope.isUserTableReady = 0;
+			
 		}
 		
 		$scope.drawColoredBoxes = function(){
@@ -164,50 +177,13 @@
 <body>
 <div ng-app='GameApp' ng-controller="InitController" ng-init="init()">
 	Select the User convas dimension :
-	<select ng-model="myDim">
+	<select ng-model="myDim" ng-change="onChange()">
 		<option ng-repeat="dimension in convasdimension" value="{{dimension.id}}">{{dimension.name}}</option>
 	</select>
    
-    <div ng-show="myDim == 5">
+    <div ng-show="myDim != 0">
     <user-convas-area></user-convas-area>
-	</div>
-	<!--	
-	<div class="row">
-	<div class="cell red" id="cell1"></div>
-	<div class="cell" id="cell2"></div>
-	<div class="cell" id="cell3"></div>
-	<div class="cell" id="cell4"></div>
-	<div class="cell red" id="cell5"></div>
-	</div>
-	<div class="row">	
-	<div class="cell" id="cell6"></div>
-	<div class="cell yellow" id="cell7"></div>
-	<div class="cell" id="cell8"></div>	
-	<div class="cell" id="cell9"></div>	
-	<div class="cell" id="cell10"></div>	
-	</div>
-	<div class="row">	
-	<div class="cell" id="cell11"></div>
-	<div class="cell" id="cell12"></div>
-	<div class="cell" id="cell13"></div>	
-	<div class="cell" id="cell14"></div>	
-	<div class="cell blue" id="cell15"></div>	
-	</div>
-	<div class="row">	
-	<div class="cell" id="cell16"></div>
-	<div class="cell" id="cell17"></div>
-	<div class="cell" id="cell18"></div>	
-	<div class="cell" id="cell19"></div>	
-	<div class="cell" id="cell20"></div>	
-	</div>
-	<div class="row">	
-	<div class="cell yellow" id="cell21"></div>
-	<div class="cell" id="cell22"></div>
-	<div class="cell blue" id="cell23"></div>	
-	<div class="cell" id="cell24"></div>	
-	<div class="cell" id="cell25"></div>	
-	</div>
-	-->
+	</div>	
 </div>
 </body>
 </html>
