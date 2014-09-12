@@ -21,7 +21,11 @@
 			  {name:'4x4', id:4},
 			  {name:'5x5', id:5},		  
 		];
-				
+		
+		$scope.selectAction = function(){
+			console.log('Option selected : ' + $scope.myDim);	
+		}		
+		
 		/* It will used in case of undo the user selection */
 		$scope.rollBackCellColor = function(){
 			var i, cellID, tempElem, len = ($scope.pathTraversed).length;
@@ -159,10 +163,12 @@
 </head>
 <body>
 <div ng-app='GameApp' ng-controller="InitController" ng-init="init()">
-	Select the User convas dimension : 
-    <select ng-model="myDim" ng-options="dimension.name for dimension in convasdimension"></select>   
-    
-    <div ng-show="myDim > 2">
+	Select the User convas dimension :
+	<select ng-model="myDim">
+		<option ng-repeat="dimension in convasdimension" value="{{dimension.id}}">{{dimension.name}}</option>
+	</select>
+   
+    <div ng-show="myDim == 5">
     <user-convas-area></user-convas-area>
 	</div>
 	<!--	
