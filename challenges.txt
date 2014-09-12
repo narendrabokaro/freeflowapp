@@ -1,0 +1,4 @@
+1) angularjs directive pick up class name from dynamic content - see th cell directive
+http://stackoverflow.com/questions/16929669/can-angularjs-directive-pick-up-class-name-from-dynamic-content
+
+

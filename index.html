@@ -7,6 +7,8 @@
 	
 	GameApplication.controller("InitController", function($scope, $sce){
 		$scope.isUserTableReady = 0;
+		$scope.isColorDotsReady = 0;
+		
 		$scope.colorBoxes = ['red', 'yellow', 'blue'];
 		//Mouse operation
 		$scope.isPressed = 0;	
@@ -21,20 +23,42 @@
 			  {name:'4x4', id:4},
 			  {name:'5x5', id:5},		  
 		];
-		
-		$scope.colorCode = ["red", "green", "yellow", "blue", "orange"];
-		
-		$scope.colorLocations = [
-			[1, 16, 11, 16, 21, 22],
-			[3, 2, 7, 12, 17],
-			[5, 4, 9, 14, 19],
-			[8, 13, 18, 27],
-			[10, 15, 20, 25, 24]
+						
+		$scope.colorDotLocations = [
+		  [
+			["red", 1, 16, 11, 16, 21, 22],
+			["green", 3, 2, 7, 12, 17],
+			["yellow", 5, 4, 9, 14, 19],
+			["blue", 8, 13, 18, 27],
+			["orange", 10, 15, 20, 25, 24]
+		  ]
 		];
 		
-		$scope.onChange = function(){
-			$scope.drawTable();	
-		}
+		$scope.drawColoredDots = function(){			
+			//if table drawn completed then only start putting the dots.
+			if($scope.isUserTableReady){
+				console.log('D1 : drawing color dots started');
+				var i, j, cellColor, innerLen, innerMostLen, cellID, tempElem, len = ($scope.colorDotLocations).length;
+				
+				for(i=0;i<len;i++){
+					innerLen = $scope.colorDotLocations[i].length;
+					for(j=0;j<innerLen;j++){						
+						//Find out color for first & last cell
+						innerMostLen = ($scope.colorDotLocations[i][j]).length;
+						cellColor = $scope.colorDotLocations[i][j][0];
+																	
+						cellID = "#cell" + $scope.colorDotLocations[i][j][1];							
+						tempElem = angular.element(document.querySelector(cellID));
+						tempElem.addClass(cellColor);											
+						cellID = "#cell" + $scope.colorDotLocations[i][j][innerMostLen-1];																																						
+						tempElem = angular.element(document.querySelector(cellID));
+						tempElem.addClass(cellColor);						
+					}
+				}
+				$scope.isColorDotsReady = 1;	
+			}
+		}	
+		
 		/* It will used in case of undo the user selection */
 		$scope.rollBackCellColor = function(){
 			var i, cellID, tempElem, len = ($scope.pathTraversed).length;
@@ -42,16 +66,13 @@
 				cellID = "#" + $scope.pathTraversed[i];																				
 				tempElem = angular.element(document.querySelector(cellID));
 				tempElem.removeClass($scope.firstCellBkColor);
-			}
-			console.log('Called - rollBackCellColor');
-			console.log('d3: ' + $scope.pathTraversed);	
+			}			
 		};
 		
 		/* Draw the user play convas */	  			  
 		$scope.drawTable = function(){			
 			var divs = '', counter = 1, i, j, dim;
-			dim = $scope.myDim;
-			console.log('Dim : ' + dim);
+			dim = $scope.myDim;			
 									
 			for(i=0;i<dim;i++){
 				divs += '<div class="row">'
@@ -61,32 +82,32 @@
 				divs += '</div>';	
 			}	
 			
-			$scope.userPlayAreaContent = $sce.trustAsHtml(divs);	
+			$scope.userPlayAreaContent = $sce.trustAsHtml(divs);				
+			$scope.isUserTableReady = 1;						
 			console.log('Table drawing activity completed.');
-			$scope.isUserTableReady = 0;
-			
-		}
-		
-		$scope.drawColoredBoxes = function(){
-			if($scope.isUserTableReady){
-				console.log('Colored pairs are created on table.');
-			}else{
-				console.log('Table is not ready, hence droping the execution.');
-			}			
-		}
-		
-		$scope.init = function(){
-			$scope.drawTable();
-			$scope.drawColoredBoxes();	
-		}
-		
-		
+		}			
 	});
 	
-	GameApplication.directive('userConvasArea', function(){
-			return {	
-				restrict: 'AE',
-				template: '<div ng-bind-html="userPlayAreaContent"></div>',							
+	GameApplication.directive('userConvasArea', function($compile){
+			return function(scope, elem, attrs){
+				
+				var html = '', counter = 1, i, j, dim;
+				//dim = $scope.myDim;			
+				dim = 5;			
+										
+				for(i=0;i<dim;i++){
+					html += '<div class="row">'
+					for(j=0;j<dim;j++){
+						html += '<div class="cell" id="cell'+(counter++)+'"></div>';
+					}					
+					html += '</div>';	
+				}	
+				console.log('html ; ' + html);
+				//create an angular element. (this is still our "view")
+				var el = angular.element(html);
+				elem.append(el);
+				//compiled(scope);				
+				//$scope.userPlayAreaContent = $sce.trustAsHtml(divs);	
 			};
 	});
 	
@@ -94,9 +115,11 @@
 		  return {
 			restrict: 'C',			
 			link: function(scope, elem, attrs) {
-			  
-			  
-			  elem.bind('mousedown', function() {
+			  elem.on('click', function(){
+				  alert('welcome');  
+			  });
+			  			  
+			  elem.on('mousedown', function() {
 				//Basic initialization	
 				scope.isPressed = 1; 	
 				scope.pathTraversed = [];			
@@ -118,7 +141,6 @@
 					}				
 					
 					//Check - if current startCellBkColor is different from startCellBkColor or white means its trying to overlap & we need to stop it & try to rollback the cells
-					console.log('startCellBkColor: '+scope.firstCellBkColor+ ' & current cell bkcolor : ' + classNames[1] + ' & prev Bkcolor:' + scope.prevBkColor);					
 					if(scope.prevBkColor != scope.defaultBkColor && scope.prevBkColor != scope.firstCellBkColor){
 						console.log('Colored cell overlapping issue - terminating it');
 						scope.rollBackCellColor();
@@ -171,19 +193,21 @@
 		.red {background-color: red;}
 		.yellow {background-color: yellow;}
 		.blue {background-color: blue;}
+		.green {background-color: green;}
+		.orange {background-color: orange;}
 		.row {clear: both;}
 	</style>
 </head>
 <body>
-<div ng-app='GameApp' ng-controller="InitController" ng-init="init()">
+<div ng-app='GameApp' ng-controller="InitController">
 	Select the User convas dimension :
-	<select ng-model="myDim" ng-change="onChange()">
+	<select ng-model="myDim" ng-change="drawTable()">
 		<option ng-repeat="dimension in convasdimension" value="{{dimension.id}}">{{dimension.name}}</option>
 	</select>
-   
-    <div ng-show="myDim != 0">
-    <user-convas-area></user-convas-area>
-	</div>	
+	
+	<input ng-show="isUserTableReady" type="button" ng-click="drawColoredDots()" value="Populate the dots" />
+	<user-convas-area></user-convas-area>
+	
 </div>
 </body>
 </html>
